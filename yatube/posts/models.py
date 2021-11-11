@@ -26,14 +26,14 @@ class Group(models.Model):
 class Post(models.Model):
     pub_date = models.DateTimeField(
         auto_now_add=True,
-        verbose_name='Дата создания',
-        help_text='Дата и время присвоены автоматически'
+        verbose_name='Дата публикации поста',
+        help_text='Дата присвоена автоматически'
     )
 
     text = models.TextField(
         max_length=400,
-        verbose_name='Текст',
-        help_text='Введите текст'
+        verbose_name='Текст поста',
+        help_text='Введите текст поста'
     )
 
     author = models.ForeignKey(
@@ -71,7 +71,7 @@ class Comment(models.Model):
     created = models.DateTimeField(
         auto_now_add=True,
         verbose_name='Дата создания',
-        help_text='Дата и время присвоены автоматически'
+        help_text='Дата присвоена автоматически'
     )
 
     text = models.TextField(
