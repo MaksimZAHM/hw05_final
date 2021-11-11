@@ -81,8 +81,6 @@ def profile(request, username):
     if request.user.is_authenticated:
         following = Follow.objects.filter(
             user=request.user, author=author.id).exists()
-    #if Follow.objects.filter(user=request.user, author=username).exists():
-    #    following = True 
 
     context = {
         'username': author,
@@ -97,7 +95,7 @@ def post_detail(request, post_id):
     post = get_object_or_404(Post, pk=post_id)
     posts_count = post.author.posts.count()
     comments = post.comments.all()
-    form =CommentForm(request.POST or None)
+    form = CommentForm(request.POST or None)
     context = {
         'post_detail': post,
         'count_posts': posts_count,
@@ -109,7 +107,7 @@ def post_detail(request, post_id):
 
 @login_required
 def add_comment(request, post_id):
-    post = get_object_or_404(Post, pk=post_id) 
+    post = get_object_or_404(Post, pk=post_id)
     form = CommentForm(request.POST or None)
     if form.is_valid():
         comment = form.save(commit=False)

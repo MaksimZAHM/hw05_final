@@ -56,7 +56,7 @@ class Post(models.Model):
         verbose_name='Картинка',
         upload_to='posts/',
         blank=True
-    )  
+    )
 
     class Meta:
         ordering = ('-pub_date',)
