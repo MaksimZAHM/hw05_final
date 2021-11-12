@@ -2,7 +2,7 @@ import shutil
 import tempfile
 
 from ..forms import PostForm
-from ..models import Post, Group
+from ..models import Post, Group, Comment
 from django.conf import settings
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import Client, TestCase, override_settings
@@ -39,6 +39,11 @@ class PostCreateFormTests(TestCase):
             group=cls.group,
         )
         cls.form = PostForm()
+        cls.comment = Comment.objects.create(
+            author=cls.user,
+            text='Тестовый коммент',
+            post=cls.post,
+        )
 
     @classmethod
     def tearDownClass(cls):
@@ -75,7 +80,6 @@ class PostCreateFormTests(TestCase):
                 'posts:profile',
                 kwargs={'username': 'auth'}))
         self.assertEqual(Post.objects.count(), posts_count + 1)
-        print(Post.objects.first().image)
         self.assertTrue(
             Post.objects.filter(
                 author=PostCreateFormTests.user,
@@ -111,5 +115,30 @@ class PostCreateFormTests(TestCase):
                 author=PostCreateFormTests.user,
                 text='Запись',
                 image='posts/small1.gif',
+            ).exists()
+        )
+
+    def test_post_create(self):
+        """Валидная форма создает Comment."""
+        comment_count = Comment.objects.count()
+
+        form_data = {
+            'text': 'Коммент',
+        }
+        response = self.authorized_author.post(
+            reverse('posts:add_comment', kwargs={'post_id': f'{self.post.id}'}),
+            data=form_data,
+            follow=True
+        )
+        self.assertRedirects(
+            response, reverse(
+                'posts:post_detail',
+                kwargs={'post_id': f'{self.post.id}'}))
+        self.assertEqual(Comment.objects.count(), comment_count + 1)
+        self.assertTrue(
+            Comment.objects.filter(
+                author=PostCreateFormTests.user,
+                text='Коммент',
+                post=PostCreateFormTests.post,
             ).exists()
         )

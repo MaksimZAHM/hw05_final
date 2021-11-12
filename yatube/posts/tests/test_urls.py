@@ -23,9 +23,7 @@ class PostURLTests(TestCase):
         )
 
     def setUp(self):
-        # Создаем неавторизованный клиент
         self.guest_client = Client()
-        # Создаем авторизованый клиент
         self.user = User.objects.create_user(username='StasBasov')
         self.authorized_client = Client()
         self.authorized_client.force_login(self.user)
@@ -34,7 +32,6 @@ class PostURLTests(TestCase):
 
     def test_urls_uses_correct_template(self):
         """URL-адрес использует соответствующий шаблон."""
-        # Шаблоны по адресам
         templates_url_names = {
             '/': 'posts/index.html',
             '/create/': 'posts/create_post.html',
@@ -42,7 +39,8 @@ class PostURLTests(TestCase):
             f'/posts/{self.post.id}/': 'posts/post_detail.html',
             f'/profile/{self.user}/': 'posts/profile.html',
             '/group/test-slug/': 'posts/group_list.html',
-            '/unexisting_page/': 'core/404.html',
+            '/follow/': 'posts/follow.html',
+            '/unexisting_page/': 'core/404.html'
         }
         for adress, template in templates_url_names.items():
             with self.subTest(adress=adress):
@@ -79,6 +77,11 @@ class PostURLTests(TestCase):
         response = self.authorized_client.get('/create/')
         self.assertEqual(response.status_code, HTTPStatus.OK)
 
+    def test_follow(self):
+        """Страница /follow/ доступна авторизованному пользователю."""
+        response = self.authorized_client.get('/follow/')
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+
     def test_create_edit_post(self):
         """Страница /posts/<post.id>/edit/ доступна авторизованному автору."""
         adress = f'/posts/{self.post.id}/edit/'
@@ -101,3 +104,21 @@ class PostURLTests(TestCase):
         response = self.guest_client.get(adress, follow=True)
         self.assertRedirects(
             response, (f'/auth/login/?next=/posts/{self.post.id}/edit/'))
+
+    def test_profile_follow_url_redirect_anonymous_on_auth_login(self):
+        """Страница profile/<str:username>/follow/ перенаправит анонимного
+        пользователя на страницу логина.
+        """
+        adress = (f'/profile/{self.user}/follow/')
+        response = self.guest_client.get(adress, follow=True)
+        self.assertRedirects(
+            response, (f'/auth/login/?next=/profile/{self.user}/follow/'))
+
+    def test_profile_unfollow_url_redirect_anonymous_on_auth_login(self):
+        """Страница profile/<str:username>/unfollow/ перенаправит анонимного
+        пользователя на страницу логина.
+        """
+        adress = (f'/profile/{self.user}/unfollow/')
+        response = self.guest_client.get(adress, follow=True)
+        self.assertRedirects(
+            response, (f'/auth/login/?next=/profile/{self.user}/unfollow/'))
