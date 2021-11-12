@@ -100,4 +100,3 @@ class GroupModelTest(TestCase):
         group = GroupModelTest.group
         expected_object_name = group.title
         self.assertEqual(expected_object_name, str(group))
-

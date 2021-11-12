@@ -126,7 +126,9 @@ class PostCreateFormTests(TestCase):
             'text': 'Коммент',
         }
         response = self.authorized_author.post(
-            reverse('posts:add_comment', kwargs={'post_id': f'{self.post.id}'}),
+            reverse(
+                'posts:add_comment', kwargs={'post_id': f'{self.post.id}'}
+            ),
             data=form_data,
             follow=True
         )
