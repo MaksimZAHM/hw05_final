@@ -12,7 +12,7 @@ from django.contrib.auth import get_user_model
 User = get_user_model()
 TEMP_MEDIA_ROOT = tempfile.mkdtemp(dir=settings.BASE_DIR)
 
-small_gif = (
+SMALL_GIF = (
     b'\x47\x49\x46\x38\x39\x61\x02\x00'
     b'\x01\x00\x80\x00\x00\x00\x00\x00'
     b'\xFF\xFF\xFF\x21\xF9\x04\x00\x00'
@@ -39,11 +39,6 @@ class PostCreateFormTests(TestCase):
             group=cls.group,
         )
         cls.form = PostForm()
-        cls.comment = Comment.objects.create(
-            author=cls.user,
-            text='Тестовый коммент',
-            post=cls.post,
-        )
 
     @classmethod
     def tearDownClass(cls):
@@ -63,7 +58,7 @@ class PostCreateFormTests(TestCase):
         posts_count = Post.objects.count()
         uploaded = SimpleUploadedFile(
             name='small.gif',
-            content=small_gif,
+            content=SMALL_GIF,
             content_type='image/gif'
         )
         form_data = {
@@ -93,7 +88,7 @@ class PostCreateFormTests(TestCase):
         posts_count = Post.objects.count()
         uploaded = SimpleUploadedFile(
             name='small1.gif',
-            content=small_gif,
+            content=SMALL_GIF,
             content_type='image/gif'
         )
         form_data = {
@@ -118,14 +113,42 @@ class PostCreateFormTests(TestCase):
             ).exists()
         )
 
-    def test_post_create(self):
+
+class PostCommentFormTests(TestCase):
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.user = User.objects.create_user(username='auth')
+        cls.group = Group.objects.create(
+            title='Тестовая группа',
+            slug='test-slug',
+            description='Тестовое описание',
+        )
+        cls.post = Post.objects.create(
+            author=cls.user,
+            text='Запись',
+            group=cls.group,
+        )
+        cls.comment = Comment.objects.create(
+            author=cls.user,
+            text='Тестовый коммент',
+            post=cls.post,
+        )
+
+    def setUp(self):
+        self.guest_client = Client()
+        self.user = User.objects.create_user(username='StasBasov')
+        self.authorized_client = Client()
+        self.authorized_client.force_login(PostCommentFormTests.user)
+
+    def test_post_comment(self):
         """Валидная форма создает Comment."""
         comment_count = Comment.objects.count()
 
         form_data = {
             'text': 'Коммент',
         }
-        response = self.authorized_author.post(
+        response = self.authorized_client.post(
             reverse(
                 'posts:add_comment', kwargs={'post_id': f'{self.post.id}'}
             ),
@@ -139,8 +162,8 @@ class PostCreateFormTests(TestCase):
         self.assertEqual(Comment.objects.count(), comment_count + 1)
         self.assertTrue(
             Comment.objects.filter(
-                author=PostCreateFormTests.user,
+                author=PostCommentFormTests.user,
                 text='Коммент',
-                post=PostCreateFormTests.post,
+                post=PostCommentFormTests.post,
             ).exists()
         )

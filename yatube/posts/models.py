@@ -118,10 +118,13 @@ class Follow(models.Model):
     )
 
     class Meta:
-        UniqueConstraint(
-            fields=['user', 'author'],
-            name='followings are unique'
-        )
+        constraints = [
+            models.UniqueConstraint(
+                fields=('user', 'author'),
+                name='followings are unique'
+            )
+        ]
+        ordering = ('user',)
 
     def __str__(self):
-        return self.user
+        return f'{self.user} follows {self.author}'
